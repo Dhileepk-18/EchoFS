@@ -1,0 +1,6 @@
+venv/
+__pycache__/
+*.pyc
+fs.json
+fs.log
+mount_dir/

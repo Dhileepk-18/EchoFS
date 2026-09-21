@@ -1,155 +1,277 @@
-# Virtual Notes Filesystem using FUSE (Python)
+# Virtual Notes Filesystem using FUSE
 
-## Overview
-The Virtual Notes Filesystem is a user-space filesystem implemented using FUSE (Filesystem in Userspace) in Python. 
-This filesystem allows users to create, read, write, rename, and delete files inside a mounted directory. 
-Deleted files are moved to a Trash folder instead of being permanently removed. 
-The filesystem also supports persistent storage, logging, metadata, tagging, and search functionality.
+A lightweight virtual filesystem implemented in Python using **FUSE (Filesystem in Userspace)**. The project stores filesystem state in a JSON file and exposes a mounted directory through which normal Linux file operations can be performed.
 
-This project demonstrates file system concepts implemented in user space using Python and FUSE.
-
----
+The project demonstrates core operating-system filesystem concepts such as file and directory management, persistence, metadata, logging, deletion handling, and concurrent access.
 
 ## Features
-- Virtual filesystem using FUSE
-- Create directories and files
-- Read and write file content
+
+- Virtual filesystem mounted through FUSE
+- Create and remove directories
+- Create, read, write, and truncate files
 - Rename files
-- Delete files (moved to Trash)
-- Restore files from Trash
-- Permanent delete from Trash
-- Persistent storage using JSON
-- Logging of filesystem operations
-- File metadata (size, created, modified)
-- File tagging system
-- File search by name and content
-- Thread-safe filesystem operations
+- Delete files by moving them to a virtual **Trash**
+- Restore deleted files from Trash
+- Persistent filesystem state using JSON
+- Operation logging using Python's logging module
+- File metadata including type, size, creation time, modification time, and tags
+- Add custom tags to files
+- Search file contents by keyword
+- Thread-safe filesystem state updates
+- Temporary editor files such as .swp, .swx, and backup files ending in ~ are handled without being placed in Trash or logged as normal user operations
 
----
+## How It Works
 
-## System Requirements
+The filesystem keeps its virtual state in fs.json. Each file or directory is represented as a node in the JSON state.
 
-### Hardware Requirements
-- Laptop/Desktop
-- Minimum 4 GB RAM
-- Minimum 10 GB Storage
+At startup:
 
-### Software Requirements
-- Ubuntu Linux (20.04 / 22.04)
-- Python 3.x
-- FUSE
+1. main.py loads fs.json.
+2. If the state file does not exist, the root directory (/) and /Trash are created.
+3. FUSE mounts the virtual filesystem at the directory supplied on the command line.
+4. File operations performed inside the mount point are handled by the SimpleFS class.
+5. Changes are written back to fs.json.
+6. Filesystem operations are recorded in fs.log.
+
+When a normal file is deleted, it is moved to /Trash instead of being permanently removed.
+
+## Requirements
+
+The current implementation is intended for Linux systems because it depends on FUSE.
+
+### Software
+
+- Ubuntu 20.04 / 22.04 or a compatible Linux distribution
+- Python 3
+- FUSE 3
 - Git
-- Python Virtual Environment (venv)
+- Python virtual environment support
+- fusepy
 
----
+### Hardware
+
+- At least 4 GB RAM
+- At least 10 GB available storage
 
 ## Installation
 
-### Install Required Packages
-sudo apt update
-sudo apt install fuse3 libfuse3-dev
-sudo apt install python3 python3-pip python3-venv
-sudo apt install git
+### 1. Install system dependencies
 
----
+    sudo apt update
+    sudo apt install fuse3 libfuse3-dev python3 python3-pip python3-venv git
 
-## Project Setup
+### 2. Clone the repository
 
-### Clone Repository
-git clone https://github.com/YOUR_USERNAME/vfs_project.git
-cd vfs_project
+    git clone https://github.com/Dhileepk-18/vfs_project.git
+    cd vfs_project
 
-### Create Virtual Environment
-python3 -m venv venv
-source venv/bin/activate
-pip install fusepy
+### 3. Create and activate a virtual environment
 
----
+    python3 -m venv venv
+    source venv/bin/activate
+
+### 4. Install Python dependency
+
+    pip install fusepy
 
 ## Running the Filesystem
 
-### Step 1 – Activate Virtual Environment
-source venv/bin/activate
+Create a mount directory if it does not already exist:
 
-### Step 2 – Run Filesystem
-python main.py mount_dir
+    mkdir -p mount_dir
 
-The filesystem will mount in mount_dir and run in the foreground.
+Start the filesystem:
 
----
+    python3 main.py mount_dir
 
-## Filesystem Operations
-Open another terminal and execute:
+The filesystem runs in the foreground. Keep this terminal open while using the mounted filesystem.
 
-cd ~/vfs_project/mount_dir
-mkdir demo
-cd demo
-touch file.txt
-printf "Hello Virtual FS\n" > file.txt
-cat file.txt
-mv file.txt renamed.txt
-rm renamed.txt
-cd ..
-ls Trash
+Open a second terminal to perform filesystem operations.
 
-This demonstrates file creation, writing, reading, renaming, deleting, and Trash functionality.
+## Basic File Operations
 
----
+From the second terminal:
 
-## Additional Features
+    cd ~/vfs_project/mount_dir
 
-### Search Files
-python3 search.py
+    mkdir demo
+    cd demo
 
-### Restore File from Trash
-python3 restore.py
+    touch file.txt
+    printf "Hello Virtual FS\n" > file.txt
+    cat file.txt
 
-### Add Tag to File
-python3 tag_file.py
+    mv file.txt renamed.txt
+    rm renamed.txt
 
-### Show File Metadata
-python3 show_meta.py
+The deleted renamed.txt is moved to the virtual Trash.
 
-### Permanent Delete from Trash
-python3 delete_forever.py
+You can inspect the Trash from the mounted filesystem:
 
----
+    ls ~/vfs_project/mount_dir/Trash
+
+## Restore a Deleted File
+
+From the project root, run:
+
+    python3 restore.py
+
+Enter the filename stored in Trash when prompted.
+
+The script restores the file to the filesystem root using a name such as:
+
+    restored_filename.txt
+
+If that name already exists, a numbered name is generated.
+
+## Search File Contents
+
+Run:
+
+    python3 search.py
+
+Enter a keyword when prompted. The script searches the contents of files stored in the filesystem state and prints matching paths.
+
+## Add a File Tag
+
+Run:
+
+    python3 tag_file.py
+
+Enter the filesystem path and the tag when prompted.
+
+For example:
+
+    Enter file path: /demo/notes.txt
+    Enter tag: important
+
+Tags are stored with the file metadata in fs.json.
+
+## View File Metadata
+
+Run:
+
+    python3 show_meta.py
+
+Enter a filesystem path to display:
+
+- File type
+- Creation time
+- Modification time
+- Size
+- Tags
 
 ## Project Structure
 
-vfs_project/
-│
-├── main.py
-├── fs.json
-├── fs.log
-├── search.py
-├── restore.py
-├── tag_file.py
-├── show_meta.py
-├── delete_forever.py
-├── mount_dir/
-├── Trash/
-├── venv/
-├── README.md
+    vfs_project/
+    ├── main.py          # FUSE filesystem implementation
+    ├── restore.py       # Restore a file from Trash
+    ├── search.py        # Search file contents
+    ├── show_meta.py     # Display file metadata
+    ├── tag_file.py      # Add tags to files
+    ├── README.md        # Project documentation
+    ├── .gitignore       # Ignored runtime/generated files
+    ├── fs.json          # Runtime filesystem state (generated)
+    ├── fs.log           # Runtime operation log (generated)
+    ├── mount_dir/       # FUSE mount point (created locally)
+    └── venv/            # Python virtual environment (local)
 
----
+## Data Storage
 
-## Persistent Storage
-All filesystem data is stored in:
-fs.json
+### fs.json
 
-Logs of filesystem operations are stored in:
-fs.log
+Stores the persistent virtual filesystem state, including:
 
----
+- Files and directories
+- File contents
+- File sizes
+- Creation and modification timestamps
+- File tags
+- Directory-child relationships
+- The virtual Trash directory
 
-## Execution Workflow
-Run filesystem → Mount directory → Create files → Write → Rename → Delete
-→ File moves to Trash → Restore/Search/Tag/Metadata → Logs stored → Data stored in JSON
+fs.json is generated at runtime and is intentionally excluded from Git.
 
----
+### fs.log
 
-## Conclusion
-The Virtual Notes Filesystem using FUSE was successfully implemented in Python. 
-The filesystem supports file operations, Trash recovery, persistent storage, logging, metadata, tagging, and search functionality. 
-This project demonstrates how operating system file management concepts can be implemented in user space using Python and FUSE.
+Stores filesystem operation logs such as file creation, reads, writes, renames, deletions, and directory operations.
+
+fs.log is also generated at runtime and excluded from Git.
+
+## Architecture
+
+The core implementation is contained in main.py.
+
+The SimpleFS class implements FUSE filesystem operations and maintains the virtual state in memory. A thread lock protects state-changing operations before they are persisted to fs.json.
+
+The main filesystem operations include:
+
+| Operation | Implementation |
+|---|---|
+| List directory | readdir() |
+| File/directory metadata | getattr() |
+| Create directory | mkdir() |
+| Remove directory | rmdir() |
+| Create file | create() |
+| Open file | open() |
+| Read file | read() |
+| Write file | write() |
+| Resize file | truncate() |
+| Delete file | unlink() |
+| Rename file/directory | rename() |
+
+## Execution Flow
+
+    Start main.py
+         │
+         ▼
+    Load or initialize fs.json
+         │
+         ▼
+    Mount filesystem with FUSE
+         │
+         ▼
+    User performs normal file operations
+         │
+         ├── Create / Read / Write
+         ├── Rename
+         ├── Directory operations
+         └── Delete
+                 │
+                 ▼
+           Move deleted file
+              to /Trash
+                 │
+                 ▼
+         Persist state to fs.json
+                 │
+                 ▼
+           Log operation to fs.log
+
+## Limitations and Notes
+
+- The project currently targets Linux/FUSE environments rather than native Windows.
+- The filesystem is implemented as a simple JSON-backed virtual filesystem and is intended primarily for learning and demonstration.
+- Runtime files such as fs.json, fs.log, and mount_dir/ are excluded from version control.
+- The filesystem must be running before operations are performed through the mounted directory.
+- The helper scripts operate directly on fs.json, so they should be run from the project directory where that file is located.
+- There is currently no delete_forever.py file in the repository; therefore permanent deletion from Trash is not documented as an available command.
+
+## Learning Objectives
+
+This project can be used to understand:
+
+- User-space filesystem design
+- FUSE and filesystem callbacks
+- File and directory abstractions
+- Persistent state management
+- JSON-based storage
+- File metadata management
+- Logging
+- Basic concurrency control
+- Trash/recovery mechanisms
+- Interaction between operating-system file commands and a custom filesystem
+
+## License
+
+No license file is currently present in the repository. Add an appropriate license if this project is intended for redistribution or open-source use.

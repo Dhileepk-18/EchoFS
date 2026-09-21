@@ -1,6 +1,6 @@
-# Virtual Notes Filesystem using FUSE
+# EchoFS — Persistent Virtual Filesystem using FUSE
 
-A lightweight virtual filesystem implemented in Python using **FUSE (Filesystem in Userspace)**. The project stores filesystem state in a JSON file and exposes a mounted directory through which normal Linux file operations can be performed.
+**EchoFS** is a lightweight virtual filesystem implemented in Python using **FUSE (Filesystem in Userspace)**. The project stores filesystem state in a JSON file and exposes a mounted directory through which normal Linux file operations can be performed.
 
 The project demonstrates core operating-system filesystem concepts such as file and directory management, persistence, metadata, logging, deletion handling, and concurrent access.
 
@@ -62,8 +62,8 @@ The current implementation is intended for Linux systems because it depends on F
 
 ### 2. Clone the repository
 
-    git clone https://github.com/Dhileepk-18/vfs_project.git
-    cd vfs_project
+    git clone https://github.com/Dhileepk-18/EchoFS.git
+    cd EchoFS
 
 ### 3. Create and activate a virtual environment
 
@@ -92,7 +92,7 @@ Open a second terminal to perform filesystem operations.
 
 From the second terminal:
 
-    cd ~/vfs_project/mount_dir
+    cd ~/EchoFS/mount_dir
 
     mkdir demo
     cd demo
@@ -108,7 +108,7 @@ The deleted renamed.txt is moved to the virtual Trash.
 
 You can inspect the Trash from the mounted filesystem:
 
-    ls ~/vfs_project/mount_dir/Trash
+    ls ~/EchoFS/mount_dir/Trash
 
 ## Restore a Deleted File
 
@@ -163,7 +163,7 @@ Enter a filesystem path to display:
 
 ## Project Structure
 
-    vfs_project/
+    EchoFS/
     ├── main.py          # FUSE filesystem implementation
     ├── restore.py       # Restore a file from Trash
     ├── search.py        # Search file contents
